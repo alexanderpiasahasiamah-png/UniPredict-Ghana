@@ -2852,30 +2852,43 @@ z-index: 2;
   //        (Social Studies is excluded for KNUST regardless of grade)
 
   function calcAggregate(uniKey) {
-    const elecIds = ['el1','el2','el3'];
+    // 1. GET THE GRADE VALUES FIRST
+    const eng = parseInt(document.getElementById('eng').value) || 9;
+    const math = parseInt(document.getElementById('math').value) || 9;
+    const sci = parseInt(document.getElementById('sci').value) || 9;
+    const soc = parseInt(document.getElementById('soc').value) || 9;
 
+    // 2. CHECK IF "BACHELORS" IS SELECTED
+    const selectedBtn = document.querySelector('.level-btn.active');
+    const isBachelors = selectedBtn && selectedBtn.innerText.includes("Bachelors");
+
+    // 3. APPLY YOUR NEW RULES (ONLY FOR BACHELORS)
+    if (isBachelors) {
+      // RULE: If Math (7,8,9) OR English (7,8,9) -> They fail
+      if (math >= 7 || eng >= 7) {
+        return null; 
+      }
+
+      // RULE: If BOTH Social (7,8,9) AND Science (7,8,9) -> They fail
+      if (soc >= 7 && sci >= 7) {
+        return null;
+      }
+    }
+
+    // --- IF THEY PASS THE RULES, DO THE MATH BELOW ---
+    const elecIds = ['el1','el2','el3'];
     let coreSum;
 
     if (uniKey === 'KNUST') {
-      // KNUST fixed formula: English + Maths + Integrated Science only
-      const knustCores = ['eng','math','sci'];
-      coreSum = knustCores.reduce((s, id) => {
-        const v = parseInt(document.getElementById(id).value);
-        return s + (isNaN(v) ? 9 : v);
-      }, 0);
+      // KNUST fixed formula: English + Maths + Integrated Science
+      coreSum = eng + math + sci;
     } else {
       // All other universities: Best 3 out of 4 cores
-      const coreIds = ['eng','math','sci','soc'];
-      const coreVals = coreIds.map(id => {
-        const v = parseInt(document.getElementById(id).value);
-        return isNaN(v) ? 9 : v;
-      });
-      // Sort ascending — A1=1 is best, take lowest 3
+      const coreVals = [eng, math, sci, soc];
       const sortedCores = [...coreVals].sort((a, b) => a - b);
       coreSum = sortedCores.slice(0, 3).reduce((s, v) => s + v, 0);
     }
 
-    // Elective grades — all 3 are always used
     const elecVals = elecIds.map(id => {
       const v = parseInt(document.getElementById(id).value);
       return isNaN(v) ? 9 : v;
@@ -2883,7 +2896,7 @@ z-index: 2;
     const elecSum = elecVals.reduce((s, v) => s + v, 0);
 
     return coreSum + elecSum;
-  }
+}
 
   // ─── TRACK ELIGIBILITY ENGINE ───
   // Returns true if a program is accessible to the student's track
